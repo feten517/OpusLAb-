@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Build and Test Spring Boot App
+    name: Build, Test & Dockerize Spring Boot App
     runs-on: ubuntu-latest
 
     steps:
@@ -23,7 +23,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # 3️⃣ Cache les dépendances Maven pour accélérer les builds
+      # 3️⃣ Cache les dépendances Maven
       - name: Cache Maven packages
         uses: actions/cache@v4
         with:
@@ -32,15 +32,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      # 4️⃣ Build le projet sans les tests (plus rapide pour un premier run)
-      - name: Build with Maven
+      # 4️⃣ Build le projet (sans tests)
+      - name: Build Spring Boot app
         run: mvn -B -DskipTests package --file backend/pom.xml
 
-      # 5️⃣ Vérifie le Dockerfile (lint basique)
-      - name: Lint Dockerfile
+      # 5️⃣ Vérifie le Dockerfile
+      - name: Check Dockerfile
         run: |
           if [ ! -f backend/Dockerfile ]; then
-            echo "Dockerfile missing!" && exit 1
+            echo "❌ Dockerfile missing!"
+            exit 1
           else
-            echo "Dockerfile found ✅"
+            echo "✅ Dockerfile found!"
           fi
+
+      # 6️⃣ Build l'image Docker
+      - name: Build Docker image
+        run: docker build -t opuslab-backend ./backend
